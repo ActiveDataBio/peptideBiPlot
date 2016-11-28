@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="utf-8">
+<meta charset="ISO-8859-1">
 <title>Peptide Centric Bi Plot</title>
 <link rel="stylesheet" href="//cdn.datatables.net/1.10.11/css/dataTables.semanticui.min.css" type="text/css"/>
 <link rel="stylesheet" type="text/css" class="ui" charset="utf-8" href="//oss.maxcdn.com/semantic-ui/2.2.2/semantic.min.css">
@@ -498,8 +498,8 @@ $(document).ready(function(){
   d3.select('svg').on("mousedown", box_selection.start);
   d3.select('svg').on("mousemove", box_selection.during, false);
   d3.select('svg').on("mouseup", box_selection.end, false);
-  d3.tsv("data/CorrelationTest.txt",function(error, chemicalComp){
-  //d3.tsv("data/IC50CorrelationEnrichment_2016_10_27.txt",function(error, chemicalComp){
+  //d3.tsv("FAQ/data/CorrelationTest.txt",function(error, chemicalComp){
+  d3.tsv("FAQ/data/IC50CorrelationEnrichment_2016_10_27.txt",function(error, chemicalComp){
     if(!chemicalComp){ console.log('error loading file'); return;}
     //add properties to data and reformat
      var zoom = d3.behavior.zoom()
@@ -558,9 +558,12 @@ $(document).ready(function(){
     
     
  // Render axes
- 	var mouseAxis = false;
- 	var mousedown = false;
+ 	var mouseXAxis = false;
+ 	var mouseXdown = false;
  	var startXVal = 0;
+ 	var mouseYAxis = false;
+ 	var mouseYdown = false;
+ 	var startYVal = 0;
     var xaxis =svg
       .append("g")
       .attr('transform', 'translate(0, '+(height-padding+20)+')')
@@ -568,8 +571,8 @@ $(document).ready(function(){
       .style('pointer-events','all')
       .on('mouseenter',function(){
         
-        if(!mouseAxis){
-          mouseAxis = true;
+        if(!mouseXAxis){
+          mouseXAxis = true;
           d3.event.stopPropagation();
           d3.event.preventDefault();
           d3.select(this).append('path')
@@ -584,12 +587,12 @@ $(document).ready(function(){
         return false;
       })
       .on('mousemove',function(){
-        if(mouseAxis){
+        if(mouseXAxis){
           d3.event.stopPropagation();
           d3.event.preventDefault();
           d3.select(this.parentNode).select('#line')
         	.attr('transform','translate('+d3.event.clientX+', 0)');
-          if(mousedown){
+          if(mouseXdown){
             var rect = rectPoints({x:startXVal,y:0},{x:d3.event.clientX,y:height-padding+10});
             renderBox('draw',rect);
            
@@ -600,7 +603,7 @@ $(document).ready(function(){
       })
       .on('mouseleave',function(){
         console.log(this);
-        mouseAxis = false;
+        mouseXAxis = false;
         d3.select(this).select('#line').remove();
       })
       .on('click',function(){        
@@ -623,12 +626,12 @@ $(document).ready(function(){
             }
           });*/
       }).on('mousedown',function(){
-        mousedown = true;
+        mouseXdown = true;
         startXVal = d3.event.clientX;
       }).on('mouseup',function(){
-        mousedown = false;
+        mouseXdown = false;
         renderBox('clear');
-        if(!mousedown){
+        if(!mouseXdown){
           var rect = rectPoints({x:startXVal,y:0},{x:d3.event.clientX,y:height-padding+10});
           //mouse up select within rect
           //highlight selected
@@ -660,14 +663,91 @@ $(document).ready(function(){
 	
     //axis hit box for mouse events
     xaxis.append('rect')
-      .attr('height',17)
+      .attr('height',25)
       .attr('width',width)
       .attr('fill','transparent');
-    svg
+    var yaxis = svg
       .append("g")
       .attr('id', 'yAxis')
       .attr('transform', 'translate('+padding+', 0)')
+      .on('mouseenter',function(){
+        
+        if(!mouseYAxis){
+          mouseYAxis = true;
+          d3.event.stopPropagation();
+          d3.event.preventDefault();
+          d3.select(this).append('path')
+          	.attr('id','line')
+          	.attr('d','M -10 0 L 30 0')
+          	.attr('transform','translate(-25,'+d3.event.clientY+')')
+          	.attr('stroke','black')
+          	.attr('stroke-width',2)
+          	.attr('fill','none')
+          	.style('opacity:1;pointer-events: none;');
+        }
+        return false;
+      })
+      .on('mousemove',function(){
+        if(mouseYAxis){
+          d3.event.stopPropagation();
+          d3.event.preventDefault();
+          d3.select(this.parentNode).select('#line')
+        	.attr('transform','translate(-25,'+d3.event.clientY+')');
+          if(mouseYdown){
+            var rect = rectPoints({x:padding,y:startYVal},{y:d3.event.clientY,x:width-padding+10});
+            renderBox('draw',rect);
+          }
+        }
+        return false;
+      })
+      .on('mouseleave',function(){
+        console.log(this);
+        mouseYAxis = false;
+        d3.select(this).select('#line').remove();
+      })
+      .on('mousedown',function(){
+        mouseYdown = true;
+        startYVal = d3.event.clientY;
+      }).on('mouseup',function(){
+        mouseYdown = false;
+        renderBox('clear');
+        if(!mouseYdown){
+          var rect = rectPoints({y:startYVal,x:padding},{y:d3.event.clientY,x:width-padding+10});
+          //mouse up select within rect
+          //highlight selected
+           var selected = d3.selectAll('circle').filter(function(d){
+              var _thisD3 = d3.select(this);
+              var cx = _thisD3.attr('cx');
+              var cy = _thisD3.attr('cy');
+              return rect.min_x < cx && rect.max_x > cx && rect.min_y < cy && rect.max_y >cy;
+            });
+            selected.attr('fill',function(d){return d.color();});
+          if(selected[0].length > 1){
+            var content = '<div class="ui" style="margin:10px 0 0 10px;">Selected: '+selected[0].length+'/'+d3.selectAll('circle')[0].length+'</div>';
+            $.jsPanel({
+              position:{left:width/2,top:height/2},
+              headerTitle:'Grouping Card',
+              content:content,
+              onclosed:function(){
+                d3.selectAll('circle').style('opacity',1);
+                d3.selectAll('circle').attr('fill','none');
+              }
+            });
+          }else if(selected[0].length == 1){
+            var data = selected.data()[0];
+          	createPanel(selected[0][0],data);
+          }
+        }
+      })
       .call(makeYAxis);
+    
+  //axis hit box for mouse events
+    yaxis.append('rect')
+      .attr('height',height)
+      .attr('width',25)
+      .attr('transform','translate(-25,0)')
+      .attr('fill','transparent');
+    
     svg.append("text")
         .attr("text-anchor", "middle")  // this makes it easy to centre the text as the transform is applied to the anchor
         .attr("transform", "translate("+ (padding/2) +","+(height/2)+")rotate(-90)")  // text is drawn off the screen top left, move down and out and rotate
