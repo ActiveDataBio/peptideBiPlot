@@ -45,6 +45,7 @@ AdbioMath.prototype = {
           return Math.sqrt(arr);
       },
     median_x : function(arr){
+        if(arr.length <= 0) return undefined;
         var median = (arr.length % 2 == 0)?(arr[Math.floor(arr.length/2)-1]+arr[Math.ceil(arr.length/2)])/2:
           arr[Math.floor(arr.length/2)];
         return median;
