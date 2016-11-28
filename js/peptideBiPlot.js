@@ -617,7 +617,7 @@ $(document).ready(function(){
         }
       })
       .call(makeXAxis);
-  
+    var svgTop = d3.select('#comparison')[0][0].getBoundingClientRect().top;
     //axis hit box for mouse events
     xaxis.append('rect')
       .attr('height',25)
@@ -636,7 +636,7 @@ $(document).ready(function(){
           d3.select(this).append('path')
             .attr('id','line')
             .attr('d','M -10 0 L 30 0')
-            .attr('transform','translate(-25,'+d3.event.clientY+')')
+            .attr('transform','translate(-25,'+(d3.event.clientY-svgTop)+')')
             .attr('stroke','black')
             .attr('stroke-width',2)
             .attr('fill','none')
@@ -649,9 +649,9 @@ $(document).ready(function(){
           d3.event.stopPropagation();
           d3.event.preventDefault();
           d3.select(this.parentNode).select('#line')
-          .attr('transform','translate(-25,'+d3.event.clientY+')');
+          .attr('transform','translate(-25,'+(d3.event.clientY-svgTop)+')');
           if(mouseYdown){
-            var rect = rectPoints({x:padding,y:startYVal},{y:d3.event.clientY,x:width-padding+10});
+            var rect = rectPoints({x:padding,y:startYVal},{y:d3.event.clientY-svgTop,x:width-padding+10});
             renderBox('draw',rect);
           }
         }
@@ -664,12 +664,12 @@ $(document).ready(function(){
       })
       .on('mousedown',function(){
         mouseYdown = true;
-        startYVal = d3.event.clientY;
+        startYVal = d3.event.clientY-svgTop;
       }).on('mouseup',function(){
         mouseYdown = false;
         renderBox('clear');
         if(!mouseYdown){
-          var rect = rectPoints({y:startYVal,x:padding},{y:d3.event.clientY,x:width-padding+10});
+          var rect = rectPoints({y:startYVal,x:padding},{y:d3.event.clientY-svgTop,x:width-padding+10});
           //mouse up select within rect
           //highlight selected
            var selected = d3.selectAll('circle').filter(function(d){
