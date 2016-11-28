@@ -397,37 +397,38 @@ $(document).ready(function(){
       .attr('transform', 'translate(0, 350)')
       .call(makeXAxis);
       
-      //draw box plot
-      //main line
-      d3.select('#UIchart_'+peptideName).append('path')
-      	.attr('d','M '+xscale(mathValues.min)+' '+yscale(data[yValueKey])+' L '+xscale(mathValues.quartile.Q1)+' '+yscale(data[yValueKey])+
-      	    'M '+xscale(mathValues.quartile.Q3)+' '+yscale(data[yValueKey])+' L '+xscale(mathValues.max)+' '+yscale(data[yValueKey]))
+      if(mathValues.quartile.Q1 && mathValues.quartile.Q3){
+        //draw box plot
+        //main line
+        d3.select('#UIchart_'+peptideName).append('path')
+        	.attr('d','M '+xscale(mathValues.min)+' '+yscale(data[yValueKey])+' L '+xscale(mathValues.quartile.Q1)+' '+yscale(data[yValueKey])+
+        	    'M '+xscale(mathValues.quartile.Q3)+' '+yscale(data[yValueKey])+' L '+xscale(mathValues.max)+' '+yscale(data[yValueKey]))
+        	.attr('stroke','#4682B4')
+        	.attr('fill','none');;
+        //min line
+        d3.select('#UIchart_'+peptideName).append('path')
+      	.attr('d','M '+xscale(mathValues.min)+' '+(yscale(data[yValueKey])-10)+' L '+xscale(mathValues.min)+' '+(yscale(data[yValueKey])+10))
       	.attr('stroke','#4682B4')
       	.attr('fill','none');;
-      //min line
-      d3.select('#UIchart_'+peptideName).append('path')
-    	.attr('d','M '+xscale(mathValues.min)+' '+(yscale(data[yValueKey])-10)+' L '+xscale(mathValues.min)+' '+(yscale(data[yValueKey])+10))
-    	.attr('stroke','#4682B4')
-    	.attr('fill','none');;
-      //max line
-      d3.select('#UIchart_'+peptideName).append('path')
-    	.attr('d','M '+xscale(mathValues.max)+' '+(yscale(data[yValueKey])-10)+' L '+xscale(mathValues.max)+' '+(yscale(data[yValueKey])+10))
-    	.attr('stroke','#4682B4')
-    	.attr('fill','none');
-      //median line
-      d3.select('#UIchart_'+peptideName).append('path')
-    	.attr('d','M '+xscale(mathValues.quartile.median)+' '+(yscale(data[yValueKey])-10)+' L '+xscale(mathValues.quartile.median)+' '+(yscale(data[yValueKey])+10))
-    	.attr('stroke','#4682B4')
-    	.attr('fill','none');      
-      //deviation box
-      d3.select('#UIchart_'+peptideName).append('rect')
-      	.attr('x',xscale(mathValues.quartile.Q1))
-      	.attr('y',(yscale(data[yValueKey])-10))
-      	.attr('width',xscale(mathValues.quartile.Q3)-xscale(mathValues.quartile.Q1))
-      	.attr('height',20)
+        //max line
+        d3.select('#UIchart_'+peptideName).append('path')
+      	.attr('d','M '+xscale(mathValues.max)+' '+(yscale(data[yValueKey])-10)+' L '+xscale(mathValues.max)+' '+(yscale(data[yValueKey])+10))
       	.attr('stroke','#4682B4')
       	.attr('fill','none');
-      	
+        //median line
+        d3.select('#UIchart_'+peptideName).append('path')
+      	.attr('d','M '+xscale(mathValues.quartile.median)+' '+(yscale(data[yValueKey])-10)+' L '+xscale(mathValues.quartile.median)+' '+(yscale(data[yValueKey])+10))
+      	.attr('stroke','#4682B4')
+      	.attr('fill','none');      
+        //deviation box
+        d3.select('#UIchart_'+peptideName).append('rect')
+        	.attr('x',xscale(mathValues.quartile.Q1))
+        	.attr('y',(yscale(data[yValueKey])-10))
+        	.attr('width',xscale(mathValues.quartile.Q3)-xscale(mathValues.quartile.Q1))
+        	.attr('height',20)
+        	.attr('stroke','#4682B4')
+        	.attr('fill','none');
+      }
       //jspanel resize because adding to content after rededered, this rerenders the panel to fit everything
       jsPan.resize("600", "auto");
     }
@@ -491,13 +492,14 @@ $(document).ready(function(){
     svg.append('g')
     	.append('rect')
     	.classed("box-select",true);
-   
+    
     
   d3.select('svg').append('g').classed('popup');
   d3.select('svg').on("mousedown", box_selection.start);
   d3.select('svg').on("mousemove", box_selection.during, false);
   d3.select('svg').on("mouseup", box_selection.end, false);
-  d3.tsv("FAQ/data/CorrelationTest.txt",function(error, chemicalComp,a,b,c,d){
+  //d3.tsv("FAQ/data/CorrelationTest.txt",function(error, chemicalComp){
+  d3.tsv("FAQ/data/IC50CorrelationEnrichment_2016_10_27.txt",function(error, chemicalComp){
     if(!chemicalComp){ console.log('error loading file'); return;}
     //add properties to data and reformat
      var zoom = d3.behavior.zoom()
