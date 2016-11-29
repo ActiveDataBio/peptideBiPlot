@@ -91,7 +91,7 @@ $(document).ready(function(){
       },
       start:function(event,i,a){
         event = event || d3.event;
-        if(event.target.id !== 'comparison') return true;
+        if(event.target.id !== 'comparison' || event.target.tagName == 'circle') return true;
         if (!this.mouseclicked && d3.event.shiftKey) {
           d3.event.preventDefault();
           d3.event.stopPropagation();
