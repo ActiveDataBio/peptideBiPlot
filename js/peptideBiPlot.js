@@ -393,7 +393,7 @@ $(document).ready(function(){
     }
     var render = function(chart,chemicalComp){ 
       var peptideName = function(data){
-        return (data && data.length>0?data:'NONE');
+        return (data && data.length>0?data.replace(';','_'):'NONE');
       };
       var circles = chart.selectAll('circle')
       .data(chemicalComp)
