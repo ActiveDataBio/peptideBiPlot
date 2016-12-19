@@ -225,7 +225,7 @@ $(document).ready(function(){
     };
     var createPanel = function(dom,data){
       var panelWidth = 600;
-      var peptideName = (data.Peptide && data.Peptide.length>0?data.Peptide:'NONE');
+      var peptideName = (data.Peptide && data.Peptide.length>0?data.Peptide.replace(';','_'):'NONE');
       var content = '<div class="ui two column grid"><div class="column"><div class="ui list" style="padding:15px 0 0 15px;margin-bottom:0;">'+data.printHtml()+'</div>';
       content += '<div id="sameProtein_'+peptideName +'" class="ui list" style="margin:0 0 0 30px;max-height:200px;overflow-y:auto;"></div>';
       content += '<div id="variance_'+peptideName+'" classs="ui list">Variance:</div></div><svg width="275" height="400" id="UIchart_'+peptideName+'" class="column"></svg></div>';
