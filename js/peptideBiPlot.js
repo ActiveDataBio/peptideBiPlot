@@ -279,7 +279,7 @@ $(document).ready(function(){
             d3.select(dom).attr('fill',function(d){return d.color();})
         }).on('mouseout',function(){
           d3.select('#comparison').selectAll('circle').style('opacity',1);
-          d3.select(dom).attr('fill','none');
+          d3.select(dom).attr('fill','white');
         });
       }
       //create list of peptides with same protein
@@ -401,7 +401,7 @@ $(document).ready(function(){
         return (data && data.length>0?data:'NONE');
       };
       var circles = chart.selectAll('circle')
-      .data(chemicalComp)
+      .data(chemicalComp,function(d){return d.Peptide;})
       
       circles
       .attr('cx',function(d){return isNaN(d[xValueKey]) ? d3.select(this).attr('cx') : xScale(d[xValueKey]);})
@@ -525,16 +525,12 @@ $(document).ready(function(){
       },
       onResults:function(r){
         console.log('onresults '+r);
-        d3.selectAll('circle').attr('fill','white');
         r.results.forEach(function(rd){
-          d3.selectAll('circle').data(rd.results,function(d){return d.Peptide;}).attr('fill',function(d){return d.color;});
           });
         //render(chart,chemicalComp);
       },
       onSelect:function(r,re){
         console.log('onSelect '+r);
-        d3.selectAll('circle').attr('fill','white');
-        d3.selectAll('circle').data(r.results,function(d){return d.Peptide;}).attr('fill',function(d){return d.color;});
         //render(chart,chemicalComp);
       },
       onSearchQuery:function(q){
