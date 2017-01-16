@@ -7,6 +7,11 @@ $(document).ready(function(){
       y: e.clientY - rect.top
     };
   }
+  d3.selection.prototype.moveToFront = function() {
+    return this.each(function(){
+      this.parentNode.appendChild(this);
+    });
+  };
   function rectPoints(start_pos,finish_pos){
     var x_min;
     var x_max;
@@ -225,7 +230,7 @@ $(document).ready(function(){
     };
     var createPanel = function(dom,data){
       var panelWidth = 600;
-      var peptideName = (data.Peptide && data.Peptide.length>0?data.Peptide.replace(';','_'):'NONE');
+      var peptideName = (data.Peptide && data.Peptide.length>0?data.Peptide:'NONE');
       var content = '<div class="ui two column grid"><div class="column"><div class="ui list" style="padding:15px 0 0 15px;margin-bottom:0;">'+data.printHtml()+'</div>';
       content += '<div id="sameProtein_'+peptideName +'" class="ui list" style="margin:0 0 0 30px;max-height:200px;overflow-y:auto;"></div>';
       content += '<div id="variance_'+peptideName+'" classs="ui list">Variance:</div></div><svg width="275" height="400" id="UIchart_'+peptideName+'" class="column"></svg></div>';
@@ -393,7 +398,7 @@ $(document).ready(function(){
     }
     var render = function(chart,chemicalComp){ 
       var peptideName = function(data){
-        return (data && data.length>0?data.replace(';','_'):'NONE');
+        return (data && data.length>0?data:'NONE');
       };
       var circles = chart.selectAll('circle')
       .data(chemicalComp)
@@ -401,7 +406,7 @@ $(document).ready(function(){
       circles
       .attr('cx',function(d){return isNaN(d[xValueKey]) ? d3.select(this).attr('cx') : xScale(d[xValueKey]);})
       .attr('cy',function(d){return isNaN(d[yValueKey]) ? d3.select(this).attr('cx') : yScale(d[yValueKey]);})
-      .attr('fill','none')
+      .attr('fill',function(d){return d.selected?d.color():'white'})
       .attr('stroke', function(d, i) {return d.color();})
       .attr('r', function(d) {
         if((isNaN(d[xValueKey]) || isNaN(d[yValueKey])
@@ -420,7 +425,7 @@ $(document).ready(function(){
       //.attr('title',function(d){return (d.Peptide && d.Peptide.length>0?d.Peptide:'NONE')+' '+d.Peptide;})
       .attr('cx',function(d){return isNaN(d[xValueKey]) ? d3.select(this).attr('cx') : xScale(d[xValueKey]);})
       .attr('cy',function(d){return isNaN(d[yValueKey]) ? d3.select(this).attr('cx') : yScale(d[yValueKey]);})
-      .attr('fill','none')
+      .attr('fill','white')
       .attr('stroke', function(d, i) {return d.color();})
       .attr('stroke-width',2)
       .attr('r', function(d) {
@@ -429,10 +434,10 @@ $(document).ready(function(){
       .style('cursor', 'pointer')
       .on('click',circleHandler)
       .on('mouseover', function(d) {
-        d3.select(this).attr('fill',function(d){return d.color();});
+        d3.select(this).attr('fill',function(d){return d.color();}).moveToFront();
       })
       .on('mouseout', function(d) {
-        d3.select(this).attr('fill','none');
+        d3.select(this).attr('fill','white');
       }).append("svg:title")
       .text(function(d) {return d.Protein + ' : '+peptideName(d.Peptide); });
       
@@ -457,8 +462,8 @@ $(document).ready(function(){
   d3.select('svg').on("mousedown", box_selection.start);
   d3.select('svg').on("mousemove", box_selection.during, false);
   d3.select('svg').on("mouseup", box_selection.end, false);
-  d3.tsv("data/CorrelationTest.txt",function(error, chemicalComp){
-  //d3.tsv("data/IC50CorrelationEnrichment_2016_10_27.txt",function(error, chemicalComp){
+  //d3.tsv("data/CorrelationTest.txt",function(error, chemicalComp){
+  d3.tsv("data/IC50CorrelationEnrichment_2016_10_27.txt",function(error, chemicalComp){
     if(!chemicalComp){ console.log('error loading file'); return;}
     //add properties to data and reformat
      var zoom = d3.behavior.zoom()
@@ -470,7 +475,7 @@ $(document).ready(function(){
     
     var dragSelect = false;
     d3.select('body').on('keydown',function(d){
-      console.log('keydown');
+      //console.log('keydown');
       if(d3.event.shiftKey){
         dragSelect = true;
         svg.call(zoom).on("mousedown.zoom", null)
@@ -479,7 +484,7 @@ $(document).ready(function(){
       }
     });
     d3.select('body').on('keyup',function(d){
-      console.log('keyup');
+      //console.log('keyup');
       if(dragSelect){
         dragSelect = false;
         svg.call(zoom);
@@ -499,8 +504,44 @@ $(document).ready(function(){
     console.log(chemicalComp);
     
     var chart = svg.append('g').classed('chart',true);
-    
+    var searchable = [];
+    chemicalComp.forEach(function(d){
+      var temp = searchable.filter(function(e){return d.Protein === e.Protein});
+      if(temp.length >0){
+        temp[0].results.push(d);
+      }else{
+        temp = {Protein:d.Protein,results:[]}
+        temp.results.push(d);
+        searchable.push(temp);
+      }      
+    });
     render(chart,chemicalComp);
+    $('#protein_search').search({
+      source:searchable,
+      searchFields:['Protein'],
+      searchFullText: false,
+      fields:{
+        title:'Protein'
+      },
+      onResults:function(r){
+        console.log('onresults '+r);
+        d3.selectAll('circle').attr('fill','white');
+        r.results.forEach(function(rd){
+          d3.selectAll('circle').data(rd.results,function(d){return d.Peptide;}).attr('fill',function(d){return d.color;});
+          });
+        //render(chart,chemicalComp);
+      },
+      onSelect:function(r,re){
+        console.log('onSelect '+r);
+        d3.selectAll('circle').attr('fill','white');
+        d3.selectAll('circle').data(r.results,function(d){return d.Peptide;}).attr('fill',function(d){return d.color;});
+        //render(chart,chemicalComp);
+      },
+      onSearchQuery:function(q){
+        console.log('querry: '+q)
+        
+      }
+    })
     
     function makeXAxis(s) {
       s.call(d3.svg.axis()
