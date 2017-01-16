@@ -525,12 +525,16 @@ $(document).ready(function(){
       },
       onResults:function(r){
         console.log('onresults '+r);
+        d3.selectAll('circle').attr('fill','white').style('opacity',0.2);
         r.results.forEach(function(rd){
+          d3.selectAll('circle').data(rd.results,function(d){return d.Peptide;}).attr('fill',function(d){return d.color();}).style('opacity',1).style('opacity',1).moveToFront();
           });
         //render(chart,chemicalComp);
       },
       onSelect:function(r,re){
         console.log('onSelect '+r);
+        d3.selectAll('circle').attr('fill','white').style('opacity',0.2);
+        d3.selectAll('circle').data(r.results,function(d){return d.Peptide;}).attr('fill',function(d){return d.color();}).style('opacity',1).style('opacity',1).moveToFront();
         //render(chart,chemicalComp);
       },
       onSearchQuery:function(q){
