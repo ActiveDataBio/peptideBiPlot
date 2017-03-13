@@ -463,7 +463,7 @@ $(document).ready(function(){
   d3.select('svg').on("mousemove", box_selection.during, false);
   d3.select('svg').on("mouseup", box_selection.end, false);
   //d3.tsv("data/CorrelationTest.txt",function(error, chemicalComp){
-  d3.tsv("data/IC50CorrelationEnrichment_2016_10_27.txt",function(error, chemicalComp){
+  d3.tsv("data/ProbitPhosphoPeptideCorrelation_3_12_17.txt",function(error, chemicalComp){
     if(!chemicalComp){ console.log('error loading file'); return;}
     //add properties to data and reformat
      var zoom = d3.behavior.zoom()
