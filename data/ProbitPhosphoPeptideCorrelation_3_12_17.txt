@@ -1,4 +1,4 @@
-Protein	Peptide	xKey[Q-IC50-Correlation]	xPVal[Q-IC50-Correlation-pvalue]	yKey[P-IC50-Correlation]	yPVal[P-IC50-Correlation-pvalue]
+Protein	Peptide	xKey[Quizartinib-Correlation]	xPVal[Q-IC50-Correlation-pvalue]	yKey[Pacritinib-Correlation]	yPVal[P-IC50-Correlation-pvalue]
 AAAS	NAQFPRFsPVLGRAQ	0.234311674	0.543967067	0.2	0.61340388
 AAK1	AGHRRILsDVtHsAV	-0.644357105	0.061032958	-0.2	0.61340388
 AAK1	GQKVGsLtPPssPKt	-0.392857143	0.395634921	-0.321428571	0.497619048
