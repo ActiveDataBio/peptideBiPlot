@@ -31,7 +31,7 @@ $(document).ready(function(){
       y_min = finish_pos.y;
       y_max = start_pos.y;
     }
-  
+
     // set upper left corner
     upper_left = {
             x: x_min,
@@ -131,7 +131,7 @@ $(document).ready(function(){
           d3.event.preventDefault();
           d3.event.stopPropagation();
           var elem = d3.select('.legend');
-          var mouse = getMousePos(d3.select('#comparison'), event) 
+          var mouse = getMousePos(d3.select('#comparison'), event)
           elem.attr('transform','translate('+(mouse.x-25) +','+(mouse.y-10) +')');
         }
         return false;
@@ -146,9 +146,9 @@ $(document).ready(function(){
           // prevent click causing a zoom action
           if (Math.abs(this.start_pos.x - this.final_pos.x) < 5
                   && Math.abs(this.start_pos.y - this.final_pos.y) < 5) return;
-         
+
         var rect = rectPoints(this.start_pos,this.final_pos);
-         
+
           //highlight selected
           var selected = d3.select('#comparison').selectAll('circle').filter(function(d){
             var _thisD3 = d3.select(this);
@@ -174,12 +174,12 @@ $(document).ready(function(){
           }
           // clear selection
           renderBox('clear');
-          
+
         }
         return false;
       }
   }
-  
+
   var yValueKey = 'P-IC50-Correlation',
     xValueKey = 'Q-IC50-Correlation',
     xPvalKey = 'Q-IC50-Correlation-pvalue',
@@ -214,12 +214,13 @@ $(document).ready(function(){
         return str;
     },
     printHtml = function(){
-      var result = 
-      '<div class="item pepComp"></div>'+
-      '<div class="item">'+getName(yValueKey)+': '+this[yValueKey]+'</div>'+
-      '<div class="item">'+getName(xPvalKey)+': '+this[xPvalKey]+'</div>'+
-      '<div class="item">'+getName(yPvalKey)+': '+this[yPvalKey]+'</div>'+
-      '<div class="item">Protein: '+this['Protein']+'</div>';
+      var result =
+      '<div class="item">Current Peptide: '+this['Peptide']+'</div>'+
+      '<div class="item pepComp">'+getName(xValueKey)+', pvalue: '+parseFloat(this[xValueKey]).toFixed(3)+', '+parseFloat(this[xPvalKey]).toFixed(3)+'</div>'+
+      '<div class="item">'+getName(yValueKey)+', pvalue: '+parseFloat(this[yValueKey]).toFixed(3)+', '+parseFloat(this[yPvalKey]).toFixed(3)+'</div>';
+      // '<div class="item">'+getName(xPvalKey)+': '+parseFloat(this[xPvalKey]).toFixed(3)+'</div>'+
+      // '<div class="item">'+getName(yPvalKey)+': '+parseFloat(this[yPvalKey]).toFixed(3)+'</div>'+
+      // '<div class="item">Protein: '+this['Protein']+'</div>';
       return result;
     },
     circleHandler = function(data){
@@ -231,9 +232,12 @@ $(document).ready(function(){
     var createPanel = function(dom,data){
       var panelWidth = 600;
       var peptideName = (data.Peptide && data.Peptide.length>0?data.Peptide:'NONE');
-      var content = '<div class="ui two column grid"><div class="column"><div class="ui list" style="padding:15px 0 0 15px;margin-bottom:0;">'+data.printHtml()+'</div>';
-      content += '<div id="sameProtein_'+peptideName +'" class="ui list" style="margin:0 0 0 30px;max-height:200px;overflow-y:auto;"></div>';
-      content += '<div id="variance_'+peptideName+'" classs="ui list">Variance:</div></div><svg width="275" height="400" id="UIchart_'+peptideName+'" class="column"></svg></div>';
+      var proteinName = (data.Protein && data.Protein.length >0?data.Protein:'NONE');
+      var content = /*'<div class="ui two column grid"><div class="column">*/'<div class="ui basic segment">'+
+      '<div class="ui list">'+data.printHtml()+'</div>';
+      content += '<div id="sameProtein_'+peptideName +'" class="ui list"></div>';
+      content += '</div>'
+      //content += '<div id="variance_'+peptideName+'" classs="ui list">Variance:</div></div><svg width="275" height="400" id="UIchart_'+peptideName+'" class="column"></svg></div>';
       var sameProtein =  d3.selectAll('circle').filter(function(c){
         return data.Protein == c.Protein  && data.Peptide != c.Peptide;
       }).data();
@@ -253,14 +257,14 @@ $(document).ready(function(){
         }
         return { left:x,top:y};
       }
-      
-      
-      
+
+
+
       var jsPan = $.jsPanel({
         id:peptideName,
         size:{width:panelWidth,height:'auto',max_height:'600'},
         position:placement(dom),
-        headerTitle:peptideName,
+        headerTitle:proteinName,
         content:content,
         done:function(data, textStatus, jqXHR, panel){
           panel.content.css({"width": "auto", "height": "auto"});
@@ -299,9 +303,10 @@ $(document).ready(function(){
       .on('click',circleHandler);
       //variability section
       console.log('variance');
-      d3.select('#'+peptideName).selectAll('.pepComp').data([getName(xValueKey)]).text(function(d){return d+':'+data[xValueKey];})
+      // d3.select('#'+peptideName).selectAll('.pepComp').data([getName(xValueKey)]).text(function(d){return d+':'+data[xValueKey];})
       var headerKeys = keys.filter(function(d){return d != 'Peptide' && d != 'Protein' && d != xValueKey && d!= yValueKey && d.indexOf('pvalue') < 0});
-      
+
+      if(headerKeys.length > 0){
       d3.select('#variance_'+peptideName).selectAll('div')
         .data(headerKeys)
         .enter()
@@ -309,19 +314,19 @@ $(document).ready(function(){
         .classed('item pepComp',true)
         .style({'cursor':'pointer','margin-left':'10px'})
         .text(function(p){ return p + ' '+data[p];})
-        
+
         d3.select('#'+peptideName).selectAll('.pepComp').on('mouseover',function(d){
           d3.select('#'+peptideName).select('#variance_pepetide_'+d).attr('r',3);
         }).on('mouseout',function(d){
           d3.select('#'+peptideName).select('#variance_pepetide_'+d).attr('r',0);
         });
-      
+
       var xscale =  d3.scale.linear()
       .domain([-1, 1]).range([30,275]);
       //create chart for variance
       var yscale = d3.scale.linear()
       .domain([+data[yValueKey]-0.05, +data[yValueKey]+0.05]).range([25,350]);
-      
+
        function makeXAxis(s) {
           s.call(d3.svg.axis()
             .scale(xscale)
@@ -334,9 +339,9 @@ $(document).ready(function(){
             .orient("left")
             .tickSize(1));
         }
-      
-      
-      
+
+
+
       headerKeys.push(xValueKey)
       var values = headerKeys.map(function(d){return +data[d];});
       var mathValues = new AdbioMath(values);
@@ -350,17 +355,17 @@ $(document).ready(function(){
     .attr('fill','#4682B4')
     .attr('stoke','#4682B4')
     .attr('r',0);
-      
+
       d3.select('#UIchart_'+peptideName).append("g")
       .attr('id', 'yAxis')
       .attr('transform', 'translate(25, 0)')
       .call(makeYAxis);
-      
+
       d3.select('#UIchart_'+peptideName).append("g")
       .attr('id', 'xAxis')
       .attr('transform', 'translate(0, 350)')
       .call(makeXAxis);
-      
+
       if(mathValues.quartile.Q1 && mathValues.quartile.Q3){
         //draw box plot
         //main line
@@ -383,7 +388,7 @@ $(document).ready(function(){
         d3.select('#UIchart_'+peptideName).append('path')
         .attr('d','M '+xscale(mathValues.quartile.median)+' '+(yscale(data[yValueKey])-10)+' L '+xscale(mathValues.quartile.median)+' '+(yscale(data[yValueKey])+10))
         .attr('stroke','#4682B4')
-        .attr('fill','none');      
+        .attr('fill','none');
         //deviation box
         d3.select('#UIchart_'+peptideName).append('rect')
           .attr('x',xscale(mathValues.quartile.Q1))
@@ -393,16 +398,19 @@ $(document).ready(function(){
           .attr('stroke','#4682B4')
           .attr('fill','none');
       }
+    }else{
+      d3.select('#variance_'+peptideName).style('display','none');
+    }
       //jspanel resize because adding to content after rededered, this rerenders the panel to fit everything
       jsPan.resize("600", "auto");
     }
-    var render = function(chart,chemicalComp){ 
+    var render = function(chart,chemicalComp){
       var peptideName = function(data){
         return (data && data.length>0?data:'NONE');
       };
       var circles = chart.selectAll('circle')
       .data(chemicalComp,function(d){return d.Peptide;})
-      
+
       circles
       .attr('cx',function(d){return isNaN(d[xValueKey]) ? d3.select(this).attr('cx') : xScale(d[xValueKey]);})
       .attr('cy',function(d){return isNaN(d[yValueKey]) ? d3.select(this).attr('cx') : yScale(d[yValueKey]);})
@@ -415,9 +423,9 @@ $(document).ready(function(){
             return 0;
         return 6;
         });
-      
-      
-      
+
+
+
       circles
       .enter()
       .append('circle')
@@ -440,13 +448,13 @@ $(document).ready(function(){
         d3.select(this).attr('fill','white');
       }).append("svg:title")
       .text(function(d) {return d.Protein + ' : '+peptideName(d.Peptide); });
-      
-      
+
+
       circles.exit().remove();
     };
-    
-    
-   
+
+
+
     // init the svg elelent
     var svg = d3.select('body')
       .append('svg')
@@ -456,14 +464,14 @@ $(document).ready(function(){
     svg.append('g')
       .append('rect')
       .classed("box-select",true);
-    
-    
+
+
   d3.select('svg').append('g').classed('popup');
   d3.select('svg').on("mousedown", box_selection.start);
   d3.select('svg').on("mousemove", box_selection.during, false);
   d3.select('svg').on("mouseup", box_selection.end, false);
   //d3.tsv("data/CorrelationTest.txt",function(error, chemicalComp){
-  d3.tsv("data/IC50CorrelationEnrichment_2016_10_27.txt",function(error, chemicalComp){
+  d3.tsv("data/ProbitPhosphoPeptideCorrelation_3_12_17.txt",function(error, chemicalComp){
     if(!chemicalComp){ console.log('error loading file'); return;}
     //add properties to data and reformat
      var zoom = d3.behavior.zoom()
@@ -472,7 +480,7 @@ $(document).ready(function(){
     .scaleExtent([1, 10])
     .on("zoom", zoomed);
     svg.call(zoom);
-    
+
     var dragSelect = false;
     d3.select('body').on('keydown',function(d){
       //console.log('keydown');
@@ -490,7 +498,7 @@ $(document).ready(function(){
         svg.call(zoom);
       }
     });
-    
+
     keys = Object.keys(chemicalComp[0]);
     yValueKey = keys.filter(function(d){return d.indexOf('yKey') >=0;});
     xValueKey = keys.filter(function(d){return d.indexOf('xKey') >=0;});
@@ -502,7 +510,7 @@ $(document).ready(function(){
     d['selected']=false;
     });
     console.log(chemicalComp);
-    
+
     var chart = svg.append('g').classed('chart',true);
     var searchable = [];
     chemicalComp.forEach(function(d){
@@ -513,7 +521,7 @@ $(document).ready(function(){
         temp = {Protein:d.Protein,results:[]}
         temp.results.push(d);
         searchable.push(temp);
-      }      
+      }
     });
     render(chart,chemicalComp);
     $('#protein_search').search({
@@ -539,10 +547,10 @@ $(document).ready(function(){
       },
       onSearchQuery:function(q){
         console.log('querry: '+q)
-        
+
       }
     })
-    
+
     function makeXAxis(s) {
       s.call(d3.svg.axis()
         .scale(xScale)
@@ -555,8 +563,8 @@ $(document).ready(function(){
         .orient("left")
         .tickSize(1));
     }
-    
-    
+
+
  // Render axes
   var mouseXAxis = false;
   var mouseXdown = false;
@@ -570,7 +578,7 @@ $(document).ready(function(){
       .attr('id', 'xAxis')
       .style('pointer-events','all')
       .on('mouseenter',function(){
-        
+
         if(!mouseXAxis){
           mouseXAxis = true;
           d3.event.stopPropagation();
@@ -604,7 +612,7 @@ $(document).ready(function(){
         mouseXAxis = false;
         d3.select(this).select('#line').remove();
       })
-      .on('click',function(){        
+      .on('click',function(){
         /*
         d3.selectAll('circle').attr('fill','none');
         var selected = d3.selectAll('circle').filter(function(d){
@@ -669,7 +677,7 @@ $(document).ready(function(){
       .attr('id', 'yAxis')
       .attr('transform', 'translate('+padding+', 0)')
       .on('mouseenter',function(){
-        
+
         if(!mouseYAxis){
           mouseYAxis = true;
           d3.event.stopPropagation();
@@ -738,40 +746,40 @@ $(document).ready(function(){
         }
       })
       .call(makeYAxis);
-    
+
   //axis hit box for mouse events
     yaxis.append('rect')
       .attr('height',height)
       .attr('width',25)
       .attr('transform','translate(-25,0)')
       .attr('fill','transparent');
-    
+
     svg.append("text")
         .attr("text-anchor", "middle")  // this makes it easy to centre the text as the transform is applied to the anchor
         .attr("transform", "translate("+ (padding/2) +","+(height/2)+")rotate(-90)")  // text is drawn off the screen top left, move down and out and rotate
         .text(getName(yValueKey));
-    
+
     svg.append("text")
         .attr("text-anchor", "middle")  // this makes it easy to centre the text as the transform is applied to the anchor
         .attr("transform", "translate("+ (width/2) +","+(height-padding/2)+")")  // centre below axis
         .text(getName(xValueKey));
     //color legend implementation
     var legend = svg.append('g').attr({'width':'90','height':'60','transform':'translate(30,30)'}).classed('legend',true).style('cursor','pointer');
-    
+
     legend.append('rect').attr({'transform':'translate(-10,-20)','x':'0','y':'0','width':'90','height':'60','stroke':'black','fill':'transparent'});
-    
+
     var x_corr = legend.append('g').attr('transform','translate(0,0)');
     x_corr.append('rect').attr({width:10,height:10,fill:'green','transform':'translate(0,-10)'});
     x_corr.append('text').attr({'transform':'translate(20,0)'}).text('Sig Q');
-    
+
     var y_corr = legend.append('g').attr('transform','translate(0,15)');
     y_corr.append('rect').attr({width:10,height:10,fill:'blue','transform':'translate(0,-10)'});
     y_corr.append('text').attr({'transform':'translate(20,0)'}).text('Sig P');
-    
+
     var both_corr = legend.append('g').attr('transform','translate(0,30)');
     both_corr.append('rect').attr({width:10,height:10,fill:'red','transform':'translate(0,-10)'});
     both_corr.append('text').attr({'transform':'translate(20,0)'}).text('Sig Both');
-    
+
     legend.on('mousedown',function(d){
       if(!legendmouseDown){
         legendmouseDown = true;
@@ -786,7 +794,7 @@ $(document).ready(function(){
         d3.event.preventDefault();
         d3.event.stopPropagation();
         var elem = d3.select(this);
-        var mouse = getMousePos(d3.select('#comparison'), event) 
+        var mouse = getMousePos(d3.select('#comparison'), event)
         elem.attr('transform','translate('+(mouse.x-25) +','+(mouse.y-10) +')');
       }
       return false;*/
@@ -797,7 +805,7 @@ $(document).ready(function(){
         d3.event.stopPropagation();
         legendmouseDown = false;
          var elem = d3.select(this);
-         var mouse = getMousePos(d3.select('#comparison'), event) 
+         var mouse = getMousePos(d3.select('#comparison'), event)
          elem.attr('transform','translate('+(mouse.x-25) +','+(mouse.y-10) +')');
       }
       return false;
@@ -833,5 +841,5 @@ $(document).ready(function(){
       render(chart,chemicalComp);
     }
   });
- 
+
 });
