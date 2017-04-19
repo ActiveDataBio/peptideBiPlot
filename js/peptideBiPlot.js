@@ -229,8 +229,8 @@ $(document).ready(function(){
         printHtml = function(){
           var result =
           '<div class="item">Current Peptide: '+this['Peptide']+'</div>'+
-          '<div class="item pepComp">'+getName(xValueKey)+', pvalue: '+parseFloat(this[xValueKey]).toFixed(3)+', '+parseFloat(this[xPvalKey]).toFixed(3)+'</div>'+
-          '<div class="item">'+getName(yValueKey)+', pvalue: '+parseFloat(this[yValueKey]).toFixed(3)+', '+parseFloat(this[yPvalKey]).toFixed(3)+'</div>';
+          '<div class="item pepComp">'+getName(xValueKey).split('-')[0]+' (R<sup>2</sup>, pvalue): '+parseFloat(this[xValueKey]).toFixed(3)+', '+parseFloat(this[xPvalKey]).toFixed(3)+'</div>'+
+          '<div class="item">'+getName(yValueKey).split('-')[0]+' (R<sup>2</sup>, pvalue): '+parseFloat(this[yValueKey]).toFixed(3)+', '+parseFloat(this[yPvalKey]).toFixed(3)+'</div>';
           // '<div class="item">'+getName(xPvalKey)+': '+parseFloat(this[xPvalKey]).toFixed(3)+'</div>'+
           // '<div class="item">'+getName(yPvalKey)+': '+parseFloat(this[yPvalKey]).toFixed(3)+'</div>'+
           // '<div class="item">Protein: '+this['Protein']+'</div>';
@@ -246,12 +246,12 @@ $(document).ready(function(){
           var panelWidth = 600;
           var peptideName = (data.Peptide && data.Peptide.length>0?data.Peptide:'NONE');
           var proteinName = (data.Protein && data.Protein.length >0?data.Protein:'NONE');
-          var content = /*'<div class="ui two column grid"><div class="column">*/'<div class="ui basic segment">'+
-          '<div class="ui list">'+data.printHtml()+'</div>';
-          content+='<div class="ui top attached header">Other Protein Peptides</div>';
+          var content = '<div class="ui basic segment"><div class="ui top attached header">IC-50 / Phosphopeptide Abundance Correlation</div><div class="ui attached segment">'+
+          '<div class="ui list">'+data.printHtml()+'</div></div>';
+          content+='<div class="ui top attached header">Other '+proteinName+' Peptides</div>';
           content += '<div class="ui attached segment"><div id="sameProtein_'+peptideName +'" class="ui list"></div></div>';
 
-          content+='<div class="ui top attached header">Protein Pathways</div>';
+          content+='<div class="ui top attached header">'+proteinName+' Pathways</div>';
           content += '<div class="ui attached segment"><div id="pathwayProtein_'+peptideName +'" class="ui list"></div></div>';
           content += '</div>'
           //content += '<div id="variance_'+peptideName+'" classs="ui list">Variance:</div></div><svg width="275" height="400" id="UIchart_'+peptideName+'" class="column"></svg></div>';
@@ -320,7 +320,7 @@ $(document).ready(function(){
             })
             .on('click',circleHandler);
           }else{
-            d3.select('#sameProtein_'+peptideName).append('div').classed('item',true).text('None Found');
+            d3.select('#sameProtein_'+peptideName).selectAll('div').data(['None Found']).enter().append('div').classed('item',true).text(function(d){return d;});
           }
           //pathway information
           if(geneSymbolKeggMap.hasOwnProperty(proteinName) && pathwayMap.hasOwnProperty(parseInt(geneSymbolKeggMap[proteinName].replace('hsa:','')))){
@@ -328,8 +328,8 @@ $(document).ready(function(){
             .data(pathwayMap[parseInt(geneSymbolKeggMap[proteinName].replace('hsa:',''))]).enter().append('div')
             .classed('item',true).text(function(d){return pathwayList[d];});
           }else{
-            d3.select('#pathwayProtein_'+peptideName).append('div')
-            .classed('item',true).text('None Found');
+            d3.select('#pathwayProtein_'+peptideName).selectAll('div').data(['None Found']).enter().append('div')
+            .classed('item',true).text(function(d){return d;});
           }
           //variability section
           console.log('variance');
@@ -798,19 +798,22 @@ $(document).ready(function(){
         //color legend implementation
         var legend = svg.append('g').attr({'width':'90','height':'60','transform':'translate(30,30)'}).classed('legend',true).style('cursor','pointer');
 
-        legend.append('rect').attr({'transform':'translate(-10,-20)','x':'0','y':'0','width':'90','height':'60','stroke':'black','fill':'transparent'});
+        legend.append('rect').attr({'transform':'translate(-10,-20)','x':'0','y':'0','width':'175','height':'75','stroke':'black','fill':'transparent'});
 
-        var x_corr = legend.append('g').attr('transform','translate(0,0)');
+        var significance = legend.append('g').attr('transform','translate(0,0)');
+        significance.append('text').attr({'transform':'translate(0,0)'}).text('Significance Color Legend');
+
+        var x_corr = legend.append('g').attr('transform','translate(0,15)');
         x_corr.append('rect').attr({width:10,height:10,fill:'green','transform':'translate(0,-10)'});
-        x_corr.append('text').attr({'transform':'translate(20,0)'}).text('Sig Q');
+        x_corr.append('text').attr({'transform':'translate(20,0)'}).text(getName(xValueKey).split('-')[0]);
 
-        var y_corr = legend.append('g').attr('transform','translate(0,15)');
+        var y_corr = legend.append('g').attr('transform','translate(0,30)');
         y_corr.append('rect').attr({width:10,height:10,fill:'blue','transform':'translate(0,-10)'});
-        y_corr.append('text').attr({'transform':'translate(20,0)'}).text('Sig P');
+        y_corr.append('text').attr({'transform':'translate(20,0)'}).text(getName(yValueKey).split('-')[0]);
 
-        var both_corr = legend.append('g').attr('transform','translate(0,30)');
+        var both_corr = legend.append('g').attr('transform','translate(0,45)');
         both_corr.append('rect').attr({width:10,height:10,fill:'red','transform':'translate(0,-10)'});
-        both_corr.append('text').attr({'transform':'translate(20,0)'}).text('Sig Both');
+        both_corr.append('text').attr({'transform':'translate(20,0)'}).text('Both');
 
         legend.on('mousedown',function(d){
           if(!legendmouseDown){
