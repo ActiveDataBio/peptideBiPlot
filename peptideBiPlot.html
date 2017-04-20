@@ -23,6 +23,7 @@
 <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jspanel3/3.4.1/jquery.jspanel-compiled.min.js"></script>
 <script src="js/adbio.math.js" charset="utf-8"></script>
+<script src="js/pagination.js"></script>
 <style>
 svg {
   -webkit-touch-callout: none; /* iOS Safari */
@@ -38,6 +39,13 @@ svg {
 <body>
 <div class="ui secondary  menu">
   <div class="right menu">
+    <div id="pathway_search" class="item ui search">
+      <div class="ui icon input">
+        <input class="prompt" type="text" name="pathway_search" placeholder="Search Pathways...">
+        <i class="search icon"></i>
+      </div>
+      <div class="results"></div>
+    </div>
     <div id="protein_search" class="item ui search">
       <div class="ui icon input">
         <input class="prompt" type="text" name="protein_search" placeholder="Search Proteins...">
