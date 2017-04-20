@@ -255,7 +255,7 @@ $(document).ready(function(){
               id:data.pathwayId,
               contentSize:{width:panelWidth,height:'auto'},
               position:{my:'right-top',at:'right-top'},
-              headerTitle:pathwayName,
+              headerTitle:'Pathway: '+pathwayName,
               content:content,
               contentOverflow: 'auto',
               done:function(data, textStatus, jqXHR, panel){
@@ -310,11 +310,19 @@ $(document).ready(function(){
                   // });
               }).on('click','td',function(){
                 var proteinName = datatable.cell(this).data();
+                var result;
+                var abMin = 9999;
                 d3.selectAll('circle').filter(function(e){return e.Protein == proteinName;}).each(function(d,i){
-                  var jspanelCount = $('.jsPanel').length;
-                  this.panelPosition = {x:(jspanelCount+i)*25,y:(jspanelCount+i)*25};
-                  createPanel(this,d);
+                  var min = Math.min(parseFloat(d[xPvalKey]), parseFloat(d[yPvalKey]));
+                  if(min<abMin){
+                    abMin = min;
+                    result = {item:this,data:d};
+                  }
+
                 });
+                  var jspanelCount = $('.jsPanel').length;
+                  result.item.panelPosition = {x:(jspanelCount)*25,y:(jspanelCount)*25};
+                  createPanel(result.item,result.data);
 
               })
             }
@@ -375,7 +383,7 @@ $(document).ready(function(){
               },
               contentOverflow:'auto',
               position:placement(dom),
-              headerTitle:proteinName,
+              headerTitle:proteinName+' - '+peptideName,
               content:content,
               done:function(data, textStatus, jqXHR, panel){
                 panel.content.css({"width": "auto", "height": "auto"});
@@ -691,11 +699,24 @@ $(document).ready(function(){
             onSelect:function(r,re){
               console.log('onSelect '+r);
               // d3.selectAll('circle').attr('fill','white').style('opacity',0.2);
-              d3.selectAll('circle').filter(function(d){return r.Protein == d.Protein;}).each(function(data,i){
-                var jspanelCount = $('.jsPanel').length;
-                this.panelPosition = {x:(jspanelCount+i)*25,y:(jspanelCount+i)*25};
-                createPanel(this,data);
+              // d3.selectAll('circle').filter(function(d){return r.Protein == d.Protein;}).each(function(data,i){
+              //   var jspanelCount = $('.jsPanel').length;
+              //   this.panelPosition = {x:(jspanelCount+i)*25,y:(jspanelCount+i)*25};
+              //   createPanel(this,data);
+              // });
+              var result;
+              var abMin = 9999;
+              d3.selectAll('circle').filter(function(e){return e.Protein == r.Protein;}).each(function(d,i){
+                var min = Math.min(parseFloat(d[xPvalKey]), parseFloat(d[yPvalKey]));
+                if(min<abMin){
+                  abMin = min;
+                  result = {item:this,data:d};
+                }
+
               });
+              var jspanelCount = $('.jsPanel').length;
+              result.item.panelPosition = {x:(jspanelCount)*25,y:(jspanelCount)*25};
+              createPanel(result.item,result.data);
 
               // .data(r.results,function(d){return d.Peptide;}).attr('fill',function(d){return d.color();}).style('opacity',1).style('opacity',1).moveToFront();
               //render(chart,chemicalComp);
@@ -707,7 +728,7 @@ $(document).ready(function(){
           })
           $('#pathway_search').search({
             source:Object.keys(pathwayList).map(function(d){return {title:pathwayList[d],id:d};}),
-            searchFullText: true,
+            searchFullText: false,
             // fields:{
             //   title:'Protein'
             // },
