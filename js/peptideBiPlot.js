@@ -457,6 +457,7 @@ $(document).ready(function(){
             }
             //variability section
             console.log('variance');
+
             // d3.select('#'+peptideName).selectAll('.pepComp').data([getName(xValueKey)]).text(function(d){return d+':'+data[xValueKey];})
             var headerKeys = keys.filter(function(d){return d != 'Peptide' && d != 'Protein' && d != xValueKey && d!= yValueKey && d.indexOf('pvalue') < 0});
 
@@ -655,12 +656,14 @@ $(document).ready(function(){
               svg.call(zoom);
             }
           });
-
+          function filterIndexOf(d){
+            return d.indexOf(this) >=0;
+          }
           keys = Object.keys(chemicalComp[0]);
-          yValueKey = keys.filter(function(d){return d.indexOf('yKey') >=0;});
-          xValueKey = keys.filter(function(d){return d.indexOf('xKey') >=0;});
-          xPvalKey = keys.filter(function(d){return d.indexOf('xPVal') >=0;});
-          yPvalKey = keys.filter(function(d){return d.indexOf('yPVal') >=0;});
+          yValueKey = keys.filter(filterIndexOf, 'yKey');
+          xValueKey = keys.filter(filterIndexOf, 'xKey');
+          xPvalKey = keys.filter(filterIndexOf, 'xPVal');
+          yPvalKey = keys.filter(filterIndexOf, 'yPVal');
           chemicalComp.forEach(function(d){
           d['color'] = pointColor;
           d['printHtml']=printHtml;
@@ -681,51 +684,94 @@ $(document).ready(function(){
             }
           });
           render(chart,chemicalComp);
-          $('#protein_search').search({
-            source:searchable,
-            searchFields:['Protein'],
-            searchFullText: false,
-            fields:{
-              title:'Protein'
-            },
-            onResults:function(r){
-              // console.log('onresults '+r);
-              // d3.selectAll('circle').attr('fill','white').style('opacity',0.2);
-              // r.results.forEach(function(rd){
-              //   d3.selectAll('circle').data(rd.results,function(d){return d.Peptide;}).attr('fill',function(d){return d.color();}).style('opacity',1).style('opacity',1).moveToFront();
-              //   });
-              //render(chart,chemicalComp);
-            },
-            onSelect:function(r,re){
-              console.log('onSelect '+r);
-              // d3.selectAll('circle').attr('fill','white').style('opacity',0.2);
-              // d3.selectAll('circle').filter(function(d){return r.Protein == d.Protein;}).each(function(data,i){
-              //   var jspanelCount = $('.jsPanel').length;
-              //   this.panelPosition = {x:(jspanelCount+i)*25,y:(jspanelCount+i)*25};
-              //   createPanel(this,data);
-              // });
-              var result;
+          $('#protein_search').append(
+            '<input class="prompt" type="hidden" name="protein_search">'
+            + '<div class="default text">Search Proteins...</div>'
+            + '<i class="dropdown icon"></i>'
+            + '<div class="menu">'
+            + searchable.map(function(e) {
+              return '<div class="item" data-value="'+e.Protein+'">'+e.Protein+'</div>';
+            }).join('')
+            +'</div>'
+          ).dropdown({
+            onChange: function(value, text, $selectedItem) {
+              var result = [];
               var abMin = 9999;
-              d3.selectAll('circle').filter(function(e){return e.Protein == r.Protein;}).each(function(d,i){
-                var min = Math.min(parseFloat(d[xPvalKey]), parseFloat(d[yPvalKey]));
-                if(min<abMin){
-                  abMin = min;
-                  result = {item:this,data:d};
-                }
-
-              });
-              var jspanelCount = $('.jsPanel').length;
-              result.item.panelPosition = {x:(jspanelCount)*25,y:(jspanelCount)*25};
-              createPanel(result.item,result.data);
-
-              // .data(r.results,function(d){return d.Peptide;}).attr('fill',function(d){return d.color();}).style('opacity',1).style('opacity',1).moveToFront();
-              //render(chart,chemicalComp);
+              d3.selectAll('circle')
+                .attr('fill','white')
+                .style('opacity',0.2);
+              d3.selectAll('circle')
+                .filter(function(e) {
+                  return value.split(',').indexOf(e.Protein) >= 0;
+                })
+                .attr('fill', function(d) {
+                  return d.color();
+                })
+                .style('opacity',1)
+                .moveToFront();
+              // d3.selectAll('circle')
+              //   .filter(function(e) {
+              //     return value.split(',').indexOf(e.Protein) >= 0;
+              //   }).each(function(d,i) {
+              //     var min = Math.min(parseFloat(d[xPvalKey]), parseFloat(d[yPvalKey]));
+              //     if(min<abMin){
+              //       abMin = min;
+              //       result.push({item:this,data:d});
+              //     }
+              //   });
+              // var jspanelCount = $('.jsPanel').length;
+              // //result.item.panelPosition = {x:(jspanelCount)*25,y:(jspanelCount)*25};
+              // result.forEach(function(d) {
+              //   createPanel(d.item,d.data);
+              // })
             },
-            onSearchQuery:function(q){
-              console.log('querry: '+q)
+          });
 
-            }
-          })
+          // .search({
+          //   source:searchable,
+          //   searchFields:['Protein'],
+          //   searchFullText: false,
+          //   fields:{
+          //     title:'Protein'
+          //   },
+          //   onResults:function(r){
+          //     // console.log('onresults '+r);
+          //     // d3.selectAll('circle').attr('fill','white').style('opacity',0.2);
+          //     // r.results.forEach(function(rd){
+          //     //   d3.selectAll('circle').data(rd.results,function(d){return d.Peptide;}).attr('fill',function(d){return d.color();}).style('opacity',1).style('opacity',1).moveToFront();
+          //     //   });
+          //     //render(chart,chemicalComp);
+          //   },
+          //   onSelect:function(r,re){
+          //     console.log('onSelect '+r);
+          //     // d3.selectAll('circle').attr('fill','white').style('opacity',0.2);
+          //     // d3.selectAll('circle').filter(function(d){return r.Protein == d.Protein;}).each(function(data,i){
+          //     //   var jspanelCount = $('.jsPanel').length;
+          //     //   this.panelPosition = {x:(jspanelCount+i)*25,y:(jspanelCount+i)*25};
+          //     //   createPanel(this,data);
+          //     // });
+          //     var result;
+          //     var abMin = 9999;
+          //     d3.selectAll('circle').filter(function(e){return e.Protein == r.Protein;}).each(function(d,i){
+          //       var min = Math.min(parseFloat(d[xPvalKey]), parseFloat(d[yPvalKey]));
+          //       if(min<abMin){
+          //         abMin = min;
+          //         result = {item:this,data:d};
+          //       }
+          //
+          //     });
+          //     var jspanelCount = $('.jsPanel').length;
+          //     result.item.panelPosition = {x:(jspanelCount)*25,y:(jspanelCount)*25};
+          //     createPanel(result.item,result.data);
+          //
+          //     // .data(r.results,function(d){return d.Peptide;}).attr('fill',function(d){return d.color();}).style('opacity',1).style('opacity',1).moveToFront();
+          //     //render(chart,chemicalComp);
+          //   },
+          //   onSearchQuery:function(q){
+          //     console.log('querry: '+q)
+          //
+          //   }
+          // })
           $('#pathway_search').search({
             source:Object.keys(pathwayList).map(function(d){return {title:pathwayList[d],id:d};}),
             searchFullText: false,
