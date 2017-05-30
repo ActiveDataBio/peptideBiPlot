@@ -1048,7 +1048,7 @@ $(document).ready(function() {
             // single search
             .append('<div class="ui left icon input">'
               + '<input class="prompt" type="text" '
-              + 'placeholder="Search Proteins...">'
+              + 'placeholder="Search Proteins..."/>'
               + '<i class="search icon"></i>'
               + '</div>')
             .search({
