@@ -3,9 +3,11 @@ $(document).ready(function() {
   $.ajax({
     url: 'data/pathwayGeneList.json',
   }).done(function(geneMap) {
+    // load gene list
     $.ajax({
       url: 'data/human_genesymbol.txt',
     }).done(function(geneSymbolKeggMap) {
+      // load gene symbol to kegg map
       let filteredGenesymbolkegg = geneSymbolKeggMap
         .split('\n')
         .filter(function(d) {
@@ -25,6 +27,7 @@ $(document).ready(function() {
       $.ajax({
         url: 'data/pathwayList.txt',
       }).done(function(pathwayList) {
+        // load pathway list
         pathwayList = pathwayList
           .split('\n').filter(function(d) {
             let a = d.split('\t');
@@ -40,6 +43,7 @@ $(document).ready(function() {
         url: 'data/genePathwayList.json',
       }).done(function(pathwayMap) {
         // pathwayMap = JSON.parse(pathwayMap);
+        // load gene pathway list
         let keys = [];
         /**
         * @param {object} canvas The canvas object in the dom
@@ -59,6 +63,7 @@ $(document).ready(function() {
           });
         };
         /**
+        * Creates a rectangle that will always be in the window
         * @param {object} startPos The upper left x and y of the rectangle
         * @param {object} finishPos The lower right x and y of the rectangle
         * @return {object} The x and y of the cursor when mouse clicked
@@ -111,6 +116,7 @@ $(document).ready(function() {
               return this[str.toUpperCase()];
             },
         };
+        // draws or clears a rect on the dom for the selection of nodes
         let renderBox = function(str, rect) {
           switch(renderBoxEnum.stringToEnum(str)) {
           case 0:
@@ -134,7 +140,9 @@ $(document).ready(function() {
           break;
           }
         };
+        // if mouse is down while in legend, used for dragging
         let legendmouseDown = false;
+        // object to allow for creating a box in the cavas to select nodes
         let boxSelection = {
             mouseclicked: false,
             startPos: {
@@ -249,6 +257,7 @@ $(document).ready(function() {
               return 'black';
             }
           };
+        // function to get the name that matches the regex
         let getName = function(str) {
             let reg = /.+\[(.+)\]/;
             let match = reg.exec(str);
@@ -257,6 +266,7 @@ $(document).ready(function() {
             else
               return str;
           };
+        // prints the object as a html list
         let printHtml = function() {
             let result =
               '<div class="item">Current Peptide: '+this['Peptide']+'</div>'
@@ -268,6 +278,7 @@ $(document).ready(function() {
               +parseFloat(this[yPvalKey]).toFixed(3)+'</div>';
             return result;
           };
+        // prints the item as an item
         let printItem = function() {
           return '<div class="item">Current Protein: '+this['Protein']
             +'<br>Current Peptide: '+this['Peptide'] + '<br>'
@@ -278,6 +289,7 @@ $(document).ready(function() {
             +' (R, pvalue): '+parseFloat(this[yValueKey]).toFixed(3)+', '
             +parseFloat(this[yPvalKey]).toFixed(3)+'</div>';
         };
+        // prints item as table row
         let printTableRow = function() {
           return '<tr><td>' + this['Protein'] + '</td><td>'
             + this['Peptide'] + '</td><td>'
@@ -286,12 +298,14 @@ $(document).ready(function() {
             + parseFloat(this[yValueKey]).toFixed(3) + '</td><td>'
             + parseFloat(this[yPvalKey]).toFixed(3) + '</td></tr>';
         };
+        // handler for when circle is clicked
         let circleHandler = function(data) {
             d3.event.preventDefault();
             d3.event.stopPropagation();
             // popup
             createPanel(this, data);
           };
+        // handler for protein click
         let proteinHandler = function(data) {
             let panelWidth = 470;
             let pathwayName =pathwayList[data.pathwayId];
@@ -412,6 +426,7 @@ $(document).ready(function() {
             //   dom:'',
             // };
           };
+          // function to create panel when a group of nodes is selected
           let groupingPanel = function(selected) {
             let content =
               '<div class="ui basic segment">'
@@ -462,6 +477,7 @@ $(document).ready(function() {
               },
             });
           };
+          // creates a panel for single protein
           let createPanel = function(dom, data) {
             let panelWidth = 600;
             let peptideName = (data.Peptide
